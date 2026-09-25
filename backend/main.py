@@ -11,9 +11,20 @@ from models import Camera
 
 load_dotenv()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="Sentinel CCTV API",
     description="Backend for the Sentinel Camera Grid Dashboard"
+)
+
+# Add this CORS block so Antogravity's React frontend isn't blocked
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- PHASE 5: WebSocket Connection Manager ---
