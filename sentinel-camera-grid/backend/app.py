@@ -27,6 +27,7 @@ SENTINEL_PASSWORD = os.getenv("SENTINEL_PASSWORD", "")
 SENTINEL_CDN_HOST = os.getenv("SENTINEL_CDN_HOST", "https://cctv.corp8.cloud").rstrip("/")
 SENTINEL_DIRECT_IP = os.getenv("SENTINEL_DIRECT_IP", "103.250.160.189").strip()
 SENTINEL_RTSP_PORT = int(os.getenv("SENTINEL_RTSP_PORT", "8554"))
+SENTINEL_WHEP_PORT = int(os.getenv("SENTINEL_WHEP_PORT", "8889"))
 PORT = int(os.getenv("PORT", "3001"))
 
 OFFLINE_DEMO_ID = os.getenv("OFFLINE_DEMO_ID", "cam05").strip()
@@ -53,7 +54,8 @@ def initialize_backend():
         SENTINEL_PASSWORD,
         SENTINEL_DIRECT_IP,
         SENTINEL_RTSP_PORT,
-        OFFLINE_DEMO_ID
+        OFFLINE_DEMO_ID,
+        SENTINEL_WHEP_PORT
     )
     
     is_authenticated = is_auth

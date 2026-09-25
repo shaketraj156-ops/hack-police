@@ -25,7 +25,20 @@ def get_rtsp_url(cam_id, email, password, direct_ip, rtsp_port):
         f"/stream/{cam_id}"
     )
 
-def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, offline_demo_id):
+def get_whep_url(cam_id, email, password, direct_ip, whep_port=8889):
+    if not validate_camera_id(cam_id):
+        raise ValueError(f"Invalid camera ID: {cam_id}")
+
+    encoded_email = urllib.parse.quote(email, safe="")
+    encoded_password = urllib.parse.quote(password, safe="")
+
+    return (
+        f"http://{encoded_email}:{encoded_password}"
+        f"@{direct_ip}:{whep_port}"
+        f"/stream/{cam_id}/whep"
+    )
+
+def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, offline_demo_id, whep_port=8889):
     cat_url = f"{cdn_host}/cameras.json"
     raw_cams = None
     cdn_error = None
@@ -69,6 +82,7 @@ def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, of
             loc = c.get("location") or "Ahmedabad Metro"
             hls_url = c.get("hlsUrl") or f"{cdn_host}/{cid}/index.m3u8"
             rtsp_url = get_rtsp_url(cid, email, password, direct_ip, rtsp_port)
+            whep_url = get_whep_url(cid, email, password, direct_ip, whep_port)
             
             is_offline = (cid == offline_demo_id)
             catalogue[cid] = {
@@ -80,6 +94,7 @@ def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, of
                 "hlsUrl": f"/api/hls-manifest?id={cid}",
                 "rawHlsUrl": hls_url,
                 "rtspUrl": rtsp_url,
+                "whepUrl": whep_url,
                 "frameUrl": f"/api/frame/{cid}",
                 "mjpegUrl": f"/api/mjpeg/{cid}",
                 "lastChecked": None,
@@ -93,6 +108,7 @@ def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, of
             loc = locations[(i - 1) % len(locations)]
             display_name = f"Camera {num_str} - {loc.split(',')[0]}"
             rtsp_url = get_rtsp_url(cid, email, password, direct_ip, rtsp_port)
+            whep_url = get_whep_url(cid, email, password, direct_ip, whep_port)
             
             is_offline = (cid == offline_demo_id)
             catalogue[cid] = {
@@ -104,6 +120,7 @@ def fetch_catalogue(session, cdn_host, email, password, direct_ip, rtsp_port, of
                 "hlsUrl": f"/api/hls-manifest?id={cid}",
                 "rawHlsUrl": f"{cdn_host}/{cid}/index.m3u8",
                 "rtspUrl": rtsp_url,
+                "whepUrl": whep_url,
                 "frameUrl": f"/api/frame/{cid}",
                 "mjpegUrl": f"/api/mjpeg/{cid}",
                 "lastChecked": None,
