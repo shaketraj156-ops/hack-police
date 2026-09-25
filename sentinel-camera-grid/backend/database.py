@@ -6,10 +6,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./sentinel.db"
 
-# The engine manages the actual connection to the database (with pooling resilience for serverless Neon DB)
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+# The engine manages the actual connection to the database
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
 
 # The session factory allows routes to request temporary database access
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
