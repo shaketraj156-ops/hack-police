@@ -1,0 +1,9 @@
+{
+  "name": "sentinel-backend-python",
+  "version": "1.0.0",
+  "description": "Sentinel Camera Grid Python OpenCV Backend",
+  "scripts": {
+    "start": ".\\venv\\Scripts\\python server.py",
+    "dev": ".\\venv\\Scripts\\python server.py"
+  }
+}
