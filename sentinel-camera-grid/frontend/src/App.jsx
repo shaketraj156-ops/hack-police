@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useCameras } from "./hooks/useCameras";
 import CameraGrid from "./components/CameraGrid";
 import CameraModal from "./components/CameraModal";
@@ -8,6 +8,51 @@ export default function App() {
   const { cameras, loading, error, lastUpdated, refetch } = useCameras();
   const [filter, setFilter] = useState("ALL");
   const [selectedCamera, setSelectedCamera] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  // Connect to the unified backend WebSocket for live AI and system alerts
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/alerts`;
+    let ws = null;
+    let timer = null;
+
+    function connect() {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            setAlerts((prev) => [
+              { ...data, id: Date.now() + Math.random() },
+              ...prev.slice(0, 4),
+            ]);
+            // If it's a camera drop alert, refresh the camera list
+            if (data.type === "SYSTEM_WARNING") {
+              refetch();
+            }
+          } catch (err) {
+            console.error("Alert JSON error:", err);
+          }
+        };
+        ws.onclose = () => {
+          timer = setTimeout(connect, 4000);
+        };
+        ws.onerror = () => {
+          if (ws) ws.close();
+        };
+      } catch (err) {
+        timer = setTimeout(connect, 4000);
+      }
+    }
+
+    connect();
+
+    return () => {
+      clearTimeout(timer);
+      if (ws) ws.close();
+    };
+  }, [refetch]);
 
   const visibleCameras = useMemo(
     () => (filter === "ALL" ? cameras : cameras.filter((c) => c.status === filter)),
@@ -27,7 +72,7 @@ export default function App() {
           <h1>CCTV Operations Dashboard</h1>
           <p className="subtitle">
             {loading
-              ? "Connecting to backend…"
+              ? "Connecting to unified backend…"
               : error
               ? "⚠ Backend unreachable"
               : `Monitoring ${onlineCount} of ${totalCount} cameras live`}
@@ -50,12 +95,39 @@ export default function App() {
         </div>
       </header>
 
+      {/* Real-time AI Alerts and System Drop Warnings */}
+      {alerts.length > 0 && (
+        <div className="alerts-container">
+          {alerts.map((al) => (
+            <div
+              key={al.id}
+              className={`alert-banner ${al.type === "AI_ALERT" ? "alert-ai" : "alert-system"}`}
+            >
+              <div className="alert-content">
+                <span className="alert-badge">
+                  {al.type === "AI_ALERT" ? "🚨 ANPR / AI ALERT" : "⚠️ SYSTEM WARNING"}
+                </span>
+                <span className="alert-text">{al.message}</span>
+                {al.location && <span className="alert-tag">📍 {al.location}</span>}
+              </div>
+              <button
+                className="alert-dismiss"
+                onClick={() => setAlerts((prev) => prev.filter((item) => item.id !== al.id))}
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Error banner — shown when backend is down */}
       {error && (
         <div className="error-banner">
           <strong>Backend not reachable:</strong> {error}
           <br />
-          <small>Make sure the backend is running: <code>cd backend &amp;&amp; npm run dev</code></small>
+          <small>Make sure the backend is running: <code>cd backend &amp;&amp; uvicorn main:app --reload --port 8000</code></small>
         </div>
       )}
 

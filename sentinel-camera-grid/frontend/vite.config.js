@@ -6,11 +6,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // All /api/* requests from frontend are forwarded to the backend
+      // All /api/* and /ws/* requests from frontend are forwarded to the unified backend
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
+      },
+      '/ws': {
+        target: 'ws://127.0.0.1:8000',
+        ws: true,
       },
     },
   },

@@ -705,3 +705,85 @@ h1 {
   .modal-container { margin: 10px; }
   .modal-footer { flex-direction: column; gap: 14px; }
 }
+
+/* --- Real-Time Alert Ticker Styles --- */
+.alerts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+  animation: fadeInAlert 0.3s ease-in-out;
+}
+
+@keyframes fadeInAlert {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  border: 1px solid;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.alert-ai {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.alert-system {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fde047;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.alert-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+}
+
+.alert-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.alert-tag {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.alert-dismiss {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.alert-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+

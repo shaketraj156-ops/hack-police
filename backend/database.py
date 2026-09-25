@@ -8,8 +8,8 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# The engine manages the actual connection to the database
-engine = create_engine(DATABASE_URL)
+# The engine manages the actual connection to the database (with pooling resilience for serverless Neon DB)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
 
 # The session factory allows routes to request temporary database access
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

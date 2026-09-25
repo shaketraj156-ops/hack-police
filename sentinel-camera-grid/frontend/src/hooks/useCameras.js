@@ -21,7 +21,8 @@ export function useCameras() {
       const res = await fetch(API_URL);
       if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
       const data = await res.json();
-      setCameras(data.cameras ?? []);
+      const list = Array.isArray(data) ? data : (data.cameras ?? []);
+      setCameras(list);
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
