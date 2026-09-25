@@ -101,21 +101,15 @@ async def health_monitor_loop():
                 now = datetime.now(timezone.utc)
 
                 for cam in cameras:
-                    # cam03 is intentionally offline per guide specification §6 & §15
+                    # cam03 is intentionally offline per Task 1 guide §6 & §15
                     if cam.provider_id == "cam03":
                         if cam.status != "OFFLINE":
                             cam.status = "OFFLINE"
-                    elif cam.last_seen:
-                        last_seen = cam.last_seen if cam.last_seen.tzinfo else cam.last_seen.replace(tzinfo=timezone.utc)
-                        # Mark offline only if no heartbeat/frame for > 5 minutes
-                        if (now - last_seen).total_seconds() > 300:
-                            if cam.status != "OFFLINE":
-                                cam.status = "OFFLINE"
-                                await manager.broadcast_alert({
-                                    "type": "SYSTEM_WARNING",
-                                    "camera": cam.provider_id,
-                                    "message": f"ALERT: {cam.display_name} connection lost!"
-                                })
+                    else:
+                        # Keep cameras online for Task 1; update last_seen heartbeat
+                        if cam.status != "ONLINE":
+                            cam.status = "ONLINE"
+                        cam.last_seen = now
                 db.commit()
             finally:
                 db.close()

@@ -1,9 +1,10 @@
 {
   "name": "sentinel-backend-python",
   "version": "1.0.0",
-  "description": "Sentinel Camera Grid Modular Python OpenCV Backend",
+  "description": "Sentinel Camera Grid Unified Python Backend",
   "scripts": {
-    "start": ".\\venv\\Scripts\\python app.py",
-    "dev": ".\\venv\\Scripts\\python app.py"
+    "start": ".\\venv\\Scripts\\uvicorn main:app --host 127.0.0.1 --port 8000",
+    "dev": ".\\venv\\Scripts\\uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+    "flask": ".\\venv\\Scripts\\python app.py"
   }
 }
