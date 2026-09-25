@@ -281,14 +281,29 @@ def proxy_hls_segment(url: str = Query(...)):
         return Response(content=str(e), status_code=502)
 
 
-def get_camera_frame_bytes(cam_id: str, db: Session) -> bytes:
+# In-memory camera metadata cache to eliminate database calls during 25 FPS video streaming
+camera_metadata_cache: Dict[str, dict] = {}
+
+def get_camera_frame_bytes(cam_id: str) -> bytes:
     with cache_lock:
         if cam_id in frame_cache:
             return frame_cache[cam_id]
 
-    cam = db.query(Camera).filter(Camera.provider_id == cam_id).first()
-    location = cam.location if cam else "Ahmedabad Sector 1"
-    name = cam.display_name if cam else f"Camera {cam_id}"
+    meta = camera_metadata_cache.get(cam_id)
+    if not meta:
+        db = SessionLocal()
+        try:
+            cam = db.query(Camera).filter(Camera.provider_id == cam_id).first()
+            if cam:
+                meta = {"location": cam.location, "name": cam.display_name}
+                camera_metadata_cache[cam_id] = meta
+        except Exception:
+            pass
+        finally:
+            db.close()
+
+    location = meta["location"] if meta else "Ahmedabad Sector 1"
+    name = meta["name"] if meta else f"Camera {cam_id}"
 
     frame_bytes = generate_synthetic_cctv_frame(cam_id, location, name)
     with cache_lock:
@@ -297,8 +312,8 @@ def get_camera_frame_bytes(cam_id: str, db: Session) -> bytes:
 
 
 @app.get("/api/frame/{cam_id}")
-def capture_frame(cam_id: str, db: Session = Depends(get_db)):
-    frame_bytes = get_camera_frame_bytes(cam_id, db)
+def capture_frame(cam_id: str):
+    frame_bytes = get_camera_frame_bytes(cam_id)
     return Response(
         content=frame_bytes,
         media_type="image/jpeg",
@@ -312,16 +327,15 @@ def capture_frame(cam_id: str, db: Session = Depends(get_db)):
 @app.get("/api/mjpeg/{cam_id}")
 async def stream_mjpeg(cam_id: str):
     async def mjpeg_generator():
-        while True:
-            db = SessionLocal()
-            try:
-                frame_bytes = get_camera_frame_bytes(cam_id, db)
-            finally:
-                db.close()
-
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-            await asyncio.sleep(0.04)  # ~25 FPS
+        try:
+            while True:
+                # In-memory frame generation: zero database overhead, zero lag
+                frame_bytes = get_camera_frame_bytes(cam_id)
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                await asyncio.sleep(0.04)  # ~25 FPS
+        except asyncio.CancelledError:
+            return
 
     return StreamingResponse(
         mjpeg_generator(),

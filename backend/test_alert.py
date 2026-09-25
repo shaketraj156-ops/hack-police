@@ -20,10 +20,10 @@ async def simulate_ai_detection():
             
             # Send the payload to the FastAPI server
             await websocket.send(json.dumps(fake_alert))
-            print(f"✅ Alert successfully sent to backend: {fake_alert['message']}")
+            print(f"[SUCCESS] Alert successfully sent to backend: {fake_alert['message']}")
             
     except Exception as e:
-        print(f"❌ Could not connect to backend. Is Uvicorn running? Error: {e}")
+        print(f"[ERROR] Could not connect to backend. Is Uvicorn running? Error: {e}")
 
 if __name__ == "__main__":
     asyncio.run(simulate_ai_detection())
